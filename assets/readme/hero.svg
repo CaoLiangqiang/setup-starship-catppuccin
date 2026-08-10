@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Setup Starship Catppuccin</title>
+  <desc id="desc">A Catppuccin Powerline terminal prompt flowing consistently through Linux, WSL, PowerShell, and Windows Terminal.</desc>
+
+  <rect width="1200" height="420" rx="8" fill="#11111b"/>
+  <path d="M0 82H1200M0 336H1200" stroke="#313244" stroke-width="1"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="64" y="54" fill="#6c7086" font-size="18">AGENT SKILL / CROSS-TERMINAL PROMPT SETUP</text>
+    <text x="64" y="143" fill="#cdd6f4" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="54" font-weight="700">Setup Starship</text>
+    <text x="64" y="202" fill="#f5c2e7" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="54" font-weight="700">Catppuccin</text>
+    <text x="64" y="248" fill="#bac2de" font-size="21">one prompt / owned changes / safe rollback</text>
+  </g>
+
+  <g transform="translate(610 104)">
+    <rect width="526" height="178" rx="8" fill="#181825" stroke="#45475a" stroke-width="2"/>
+    <circle cx="28" cy="25" r="6" fill="#f38ba8"/>
+    <circle cx="48" cy="25" r="6" fill="#f9e2af"/>
+    <circle cx="68" cy="25" r="6" fill="#a6e3a1"/>
+    <text x="98" y="31" fill="#6c7086" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">~/src/setup-starship-catppuccin</text>
+
+    <g transform="translate(24 67)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="600">
+      <path d="M0 0H94L112 23L94 46H0Z" fill="#f38ba8"/>
+      <text x="16" y="30" fill="#11111b">ubuntu</text>
+
+      <path d="M94 0H205L223 23L205 46H94L112 23Z" fill="#fab387"/>
+      <text x="123" y="30" fill="#11111b">caojiang</text>
+
+      <path d="M205 0H342L360 23L342 46H205L223 23Z" fill="#f9e2af"/>
+      <text x="236" y="30" fill="#11111b">repo / main</text>
+
+      <path d="M342 0H478L496 23L478 46H342L360 23Z" fill="#b4befe"/>
+      <text x="377" y="30" fill="#11111b">14:32 / 128ms</text>
+    </g>
+
+    <text x="28" y="150" fill="#a6e3a1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="30" font-weight="700">&gt;_</text>
+  </g>
+
+  <g transform="translate(64 374)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">
+    <text x="0" y="0" fill="#89b4fa">LINUX</text>
+    <text x="94" y="0" fill="#45475a">/</text>
+    <text x="120" y="0" fill="#74c7ec">WSL</text>
+    <text x="183" y="0" fill="#45475a">/</text>
+    <text x="209" y="0" fill="#f9e2af">POWERSHELL</text>
+    <text x="335" y="0" fill="#45475a">/</text>
+    <text x="361" y="0" fill="#fab387">WINDOWS TERMINAL</text>
+
+    <text x="1072" y="0" text-anchor="end" fill="#6c7086">v0.1.0</text>
+  </g>
+</svg>
