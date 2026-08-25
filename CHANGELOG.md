@@ -1,6 +1,26 @@
 # Changelog
 
-All notable user-facing changes are recorded here. This project follows Semantic Versioning for immutable Git tags and GitHub Releases.
+All notable user-facing changes are recorded here. This project follows Semantic Versioning for versioned Git tags and GitHub Releases and never reuses a published version identifier.
+
+## [0.2.0] - 2026-08-25
+
+### Added
+
+- Cross-terminal Nerd Font troubleshooting for Ghostty, Codex, Visual Studio Code, and Kiro, including font-family discovery, deterministic glyph checks, settings precedence, and restart boundaries.
+- Version-pinned installation guidance and an explicit source-only GitHub delivery model for reproducible installs on other developer machines.
+
+### Fixed
+
+- Accepted normal Windows Terminal JSONC settings with comments and trailing commas while preserving string literals.
+- Restored pre-existing conflicting Windows font files and their exact user registry values during removal.
+- Verified the four bundled font files against `SHA256SUMS` at installer runtime before managed changes.
+- Rejected production path overrides that could write outside current-user application and profile locations.
+- Reported missing Windows Terminal settings as incomplete state and stopped installation during preflight instead of returning false readiness.
+
+### Changed
+
+- Clarified GNU/Linux and WSL as the automated Bash scope, with macOS retained as manual terminal-font diagnosis only.
+- Documented preflight, component-level recovery, restart requirements, and the non-transactional WSL-to-Windows boundary.
 
 ## [0.1.0] - 2026-08-10
 

@@ -24,7 +24,7 @@
       <text x="16" y="30" fill="#11111b">ubuntu</text>
 
       <path d="M94 0H205L223 23L205 46H94L112 23Z" fill="#fab387"/>
-      <text x="123" y="30" fill="#11111b">caojiang</text>
+      <text x="123" y="30" fill="#11111b">developer</text>
 
       <path d="M205 0H342L360 23L342 46H205L223 23Z" fill="#f9e2af"/>
       <text x="236" y="30" fill="#11111b">repo / main</text>
@@ -45,6 +45,6 @@
     <text x="335" y="0" fill="#45475a">/</text>
     <text x="361" y="0" fill="#fab387">WINDOWS TERMINAL</text>
 
-    <text x="1072" y="0" text-anchor="end" fill="#6c7086">v0.1.0</text>
+    <text x="1072" y="0" text-anchor="end" fill="#6c7086">v0.2.0</text>
   </g>
 </svg>

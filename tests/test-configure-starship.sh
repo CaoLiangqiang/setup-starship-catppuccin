@@ -28,6 +28,22 @@ expect_failure bash "$script" --check --install --home "$home_dir"
 expect_failure bash "$script" --check --home "$home_dir" --shells invalid
 expect_failure bash "$script" --check --home "$home_dir" --shells bash,zsh,fish --skip-starship-install --skip-font-cache
 
+checksum_fixture="$test_dir/checksum-fixture"
+cp -a "$repo_root" "$checksum_fixture"
+printf 'tampered\n' >> "$checksum_fixture/assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf"
+checksum_before="$(find "$home_dir" -type f -exec sha256sum {} + | sort)"
+expect_failure bash "$checksum_fixture/scripts/configure-starship.sh" --install --home "$home_dir" --shells bash --skip-starship-install --skip-font-cache
+checksum_after="$(find "$home_dir" -type f -exec sha256sum {} + | sort)"
+[ "$checksum_before" = "$checksum_after" ] || fail 'checksum rejection made a mutation'
+
+extra_font_fixture="$test_dir/extra-font-fixture"
+cp -a "$repo_root" "$extra_font_fixture"
+printf 'unexpected font\n' > "$extra_font_fixture/assets/fonts/Unexpected.ttf"
+extra_font_before="$(find "$home_dir" -type f -exec sha256sum {} + | sort)"
+expect_failure bash "$extra_font_fixture/scripts/configure-starship.sh" --install --home "$home_dir" --shells bash --skip-starship-install --skip-font-cache
+extra_font_after="$(find "$home_dir" -type f -exec sha256sum {} + | sort)"
+[ "$extra_font_before" = "$extra_font_after" ] || fail 'extra font rejection made a mutation'
+
 bash "$script" --install --home "$home_dir" --shells bash,zsh,fish --skip-starship-install --skip-font-cache >/dev/null
 cmp -s "$repo_root/assets/starship/catppuccin-powerline.toml" "$home_dir/.config/starship.toml" || fail 'theme was not installed'
 [ -f "$home_dir/.config/starship.toml.setup-starship-catppuccin.backup" ] || fail 'original theme backup is missing'

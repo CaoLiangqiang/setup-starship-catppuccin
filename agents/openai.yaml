@@ -1,4 +1,4 @@
 interface:
   display_name: "Setup Starship Catppuccin"
-  short_description: "Install a consistent Catppuccin prompt across terminals"
-  default_prompt: "Use $setup-starship-catppuccin to audit and configure Starship, Catppuccin Powerline, and Nerd Fonts across my terminals."
+  short_description: "Install and repair a reversible Catppuccin prompt"
+  default_prompt: "Use $setup-starship-catppuccin to audit, install, or repair Starship, Catppuccin Powerline, and Nerd Font rendering across my terminals."
