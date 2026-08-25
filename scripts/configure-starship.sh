@@ -12,8 +12,15 @@ skip_font_cache=0
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_asset="$repo_root/assets/starship/catppuccin-powerline.toml"
 font_asset_dir="$repo_root/assets/fonts"
+font_checksums="$font_asset_dir/SHA256SUMS"
 marker_start='# >>> setup-starship-catppuccin >>>'
 marker_end='# <<< setup-starship-catppuccin <<<'
+managed_fonts=(
+  'CaskaydiaCoveNerdFont-Regular.ttf'
+  'CaskaydiaCoveNerdFont-Bold.ttf'
+  'CaskaydiaCoveNerdFont-Italic.ttf'
+  'CaskaydiaCoveNerdFont-BoldItalic.ttf'
+)
 
 usage() {
   printf '%s\n' \
@@ -56,6 +63,10 @@ if [ "$action_count" -gt 1 ]; then
   printf 'Specify at most one action: --check, --install, or --remove.\n' >&2
   exit 2
 fi
+if [ "$(uname -s)" != 'Linux' ]; then
+  printf 'Unsupported platform: configure-starship.sh is release-qualified only for GNU/Linux and WSL. Use the manual host-font workflow on macOS.\n' >&2
+  exit 2
+fi
 if [ -z "$home_dir" ] || [ "$home_dir" = '/' ] || [ ! -d "$home_dir" ]; then
   printf 'Refusing invalid home directory: %s\n' "${home_dir:-<empty>}" >&2
   exit 2
@@ -69,13 +80,58 @@ config_stamp="$config_file.setup-starship-catppuccin.sha256"
 local_bin="$home_dir/.local/bin"
 font_dir="$home_dir/.local/share/fonts/CaskaydiaCoveNF"
 
-for required_asset in "$config_asset" "$font_asset_dir/OFL.txt" \
-  "$font_asset_dir/CaskaydiaCoveNerdFont-Regular.ttf" \
-  "$font_asset_dir/CaskaydiaCoveNerdFont-Bold.ttf" \
-  "$font_asset_dir/CaskaydiaCoveNerdFont-Italic.ttf" \
-  "$font_asset_dir/CaskaydiaCoveNerdFont-BoldItalic.ttf"; do
+for required_asset in "$config_asset" "$font_asset_dir/OFL.txt" "$font_checksums"; do
   [ -f "$required_asset" ] || { printf 'Missing bundled asset: %s\n' "$required_asset" >&2; exit 2; }
 done
+for font_name in "${managed_fonts[@]}"; do
+  required_asset="$font_asset_dir/$font_name"
+  [ -f "$required_asset" ] || { printf 'Missing bundled font: %s\n' "$required_asset" >&2; exit 2; }
+done
+
+verify_font_assets() {
+  local line hash name count=0 asset_count=0 asset
+  local -A expected=() seen=()
+  for name in "${managed_fonts[@]}"; do expected["$name"]=1; done
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ ! "$line" =~ ^([[:xdigit:]]{64})\ \ (.+)$ ]]; then
+      printf 'Invalid bundled font checksum entry: %s\n' "$line" >&2
+      return 1
+    fi
+    hash="${BASH_REMATCH[1],,}"
+    name="${BASH_REMATCH[2]}"
+    if [ -z "${expected[$name]:-}" ] || [ -n "${seen[$name]:-}" ]; then
+      printf 'Unexpected or duplicate bundled font checksum entry: %s\n' "$name" >&2
+      return 1
+    fi
+    seen["$name"]=1
+    if [ "$(sha256sum "$font_asset_dir/$name" | awk '{print $1}')" != "$hash" ]; then
+      printf 'Bundled font checksum mismatch: %s\n' "$font_asset_dir/$name" >&2
+      return 1
+    fi
+    count=$((count + 1))
+  done < "$font_checksums"
+  if [ "$count" -ne "${#managed_fonts[@]}" ]; then
+    printf 'Bundled font checksum manifest must contain exactly %s managed fonts.\n' "${#managed_fonts[@]}" >&2
+    return 1
+  fi
+  for name in "${managed_fonts[@]}"; do
+    [ -n "${seen[$name]:-}" ] || { printf 'Missing bundled font checksum entry: %s\n' "$name" >&2; return 1; }
+  done
+  for asset in "$font_asset_dir"/*.ttf; do
+    name="$(basename "$asset")"
+    if [ -z "${expected[$name]:-}" ]; then
+      printf 'Unexpected bundled font file: %s\n' "$asset" >&2
+      return 1
+    fi
+    asset_count=$((asset_count + 1))
+  done
+  if [ "$asset_count" -ne "${#managed_fonts[@]}" ]; then
+    printf 'Bundled font directory must contain exactly %s managed font files.\n' "${#managed_fonts[@]}" >&2
+    return 1
+  fi
+}
+
+verify_font_assets
 
 require_inside_home() {
   local path="$1" resolved
@@ -307,10 +363,11 @@ remove_config() {
 }
 
 install_fonts() {
-  local asset target backup
+  local asset target backup font_name
   mkdir -p "$font_dir"
-  for asset in "$font_asset_dir"/*.ttf; do
-    target="$font_dir/$(basename "$asset")"
+  for font_name in "${managed_fonts[@]}"; do
+    asset="$font_asset_dir/$font_name"
+    target="$font_dir/$font_name"
     backup="$target.setup-starship-catppuccin.backup"
     require_regular_or_missing "$target"
     require_regular_or_missing "$backup"
@@ -325,10 +382,11 @@ install_fonts() {
 }
 
 remove_fonts() {
-  local asset target backup changed=0
+  local asset target backup changed=0 font_name
   [ -d "$font_dir" ] || { printf 'No owned Linux font directory.\n'; return; }
-  for asset in "$font_asset_dir"/*.ttf; do
-    target="$font_dir/$(basename "$asset")"
+  for font_name in "${managed_fonts[@]}"; do
+    asset="$font_asset_dir/$font_name"
+    target="$font_dir/$font_name"
     backup="$target.setup-starship-catppuccin.backup"
     if [ -f "$target" ] && ! cmp -s "$asset" "$target"; then
       printf 'Preserving changed font file: %s\n' "$target" >&2
@@ -345,11 +403,12 @@ remove_fonts() {
 }
 
 check_local_state() {
-  local ready=1 shell file asset target
+  local ready=1 shell file asset target font_name
   starship_path >/dev/null || { printf 'CHANGE NEEDED: Starship executable is missing.\n'; ready=0; }
   cmp -s "$config_asset" "$config_file" || { printf 'CHANGE NEEDED: Starship config differs or is missing.\n'; ready=0; }
-  for asset in "$font_asset_dir"/*.ttf; do
-    target="$font_dir/$(basename "$asset")"
+  for font_name in "${managed_fonts[@]}"; do
+    asset="$font_asset_dir/$font_name"
+    target="$font_dir/$font_name"
     cmp -s "$asset" "$target" || { printf 'CHANGE NEEDED: font differs or is missing: %s\n' "$target"; ready=0; }
   done
   for shell in "${selected_shells[@]}"; do
@@ -361,7 +420,7 @@ check_local_state() {
 }
 
 preflight_install() {
-  local shell file state current_hash recorded_hash path asset target
+  local shell file state current_hash recorded_hash path asset target font_name
   for path in "$config_file" "$config_backup" "$config_stamp"; do require_regular_or_missing "$path"; done
   if [ -f "$config_stamp" ] && [ -f "$config_file" ]; then
     recorded_hash="$(tr -d '[:space:]' < "$config_stamp")"
@@ -377,15 +436,15 @@ preflight_install() {
     state="$(block_state "$file" "$shell")"
     case "$state" in owned|missing|absent) ;; *) printf 'Refusing %s Starship block state in %s\n' "$state" "$file" >&2; return 1 ;; esac
   done
-  for asset in "$font_asset_dir"/*.ttf; do
-    target="$font_dir/$(basename "$asset")"
+  for font_name in "${managed_fonts[@]}"; do
+    target="$font_dir/$font_name"
     require_regular_or_missing "$target"
     require_regular_or_missing "$target.setup-starship-catppuccin.backup"
   done
 }
 
 preflight_remove() {
-  local shell file state current_hash recorded_hash asset target
+  local shell file state current_hash recorded_hash asset target font_name
   if [ -f "$config_stamp" ] && [ -f "$config_file" ]; then
     recorded_hash="$(tr -d '[:space:]' < "$config_stamp")"
     current_hash="$(sha256sum "$config_file" | awk '{print $1}')"
@@ -399,8 +458,9 @@ preflight_remove() {
     state="$(block_state "$file" "$shell")"
     case "$state" in owned|missing|absent|foreign) ;; *) printf 'Refusing %s Starship block state in %s\n' "$state" "$file" >&2; return 1 ;; esac
   done
-  for asset in "$font_asset_dir"/*.ttf; do
-    target="$font_dir/$(basename "$asset")"
+  for font_name in "${managed_fonts[@]}"; do
+    asset="$font_asset_dir/$font_name"
+    target="$font_dir/$font_name"
     if [ -f "$target" ] && ! cmp -s "$asset" "$target"; then
       printf 'Refusing to remove a changed font file: %s\n' "$target" >&2
       return 1
