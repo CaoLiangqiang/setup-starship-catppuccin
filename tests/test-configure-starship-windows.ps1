@@ -139,6 +139,7 @@ try {
         -SkipStarshipInstall -SkipFontRegistration -TestMode 2>&1
     $statusExitCode = $LASTEXITCODE
     Assert-True ($statusExitCode -ne 0 -and ($statusOutput -join "`n") -match 'CHANGE NEEDED: Windows Terminal settings') 'missing Terminal status was not a failure'
+    $global:LASTEXITCODE = 0
 
     # Every install-time Terminal shape conflict must be rejected before profiles, config, or fonts change.
     $terminalCases = @{
@@ -328,6 +329,7 @@ try {
     Assert-True ($unsupportedBefore -eq (Get-TreeHash -Path $unsupportedFixture.Root)) 'unsupported registry type made a mutation'
     Assert-True ((Get-Item -LiteralPath $unsupportedRegistryPath).GetValueKind($regular).ToString() -eq 'DWord') 'unsupported registry kind was changed'
 
+    $global:LASTEXITCODE = 0
     Write-Output 'PASS: configure-starship-windows.ps1 validates JSONC, Terminal readiness, paths, checksums, and registry rollback.'
 } finally {
     if (Test-Path -LiteralPath $testRegistryPath) { Remove-Item -LiteralPath $testRegistryPath -Recurse -Force }
