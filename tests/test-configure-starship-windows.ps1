@@ -127,8 +127,18 @@ try {
     $missingBefore = Get-TreeHash -Path $missingTerminal.Root
     Assert-Fails { & $scriptPath -Action Install @missingCommon *> $null } 'missing Terminal installation should fail preflight'
     Assert-True ($missingBefore -eq (Get-TreeHash -Path $missingTerminal.Root)) 'missing Terminal preflight made a mutation'
-    $statusOutput = & $scriptPath -Action Status @missingCommon 2>&1
-    Assert-True ($LASTEXITCODE -ne 0 -and ($statusOutput -join "`n") -match 'CHANGE NEEDED: Windows Terminal settings') 'missing Terminal status was not a failure'
+    $powerShellHost = if ($PSVersionTable.PSEdition -eq 'Core') {
+        Join-Path $PSHOME 'pwsh.exe'
+    } else {
+        Join-Path $PSHOME 'powershell.exe'
+    }
+    $statusOutput = & $powerShellHost -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+        -File $scriptPath -Action Status -UserProfilePath $missingTerminal.UserRoot `
+        -PowerShellProfilePaths $missingTerminal.Profile -WindowsTerminalSettingsPath $missingTerminal.Settings `
+        -FontDirectoryPath $missingTerminal.FontDirectory -StarshipExecutable $missingTerminal.FakeStarship `
+        -SkipStarshipInstall -SkipFontRegistration -TestMode 2>&1
+    $statusExitCode = $LASTEXITCODE
+    Assert-True ($statusExitCode -ne 0 -and ($statusOutput -join "`n") -match 'CHANGE NEEDED: Windows Terminal settings') 'missing Terminal status was not a failure'
 
     # Every install-time Terminal shape conflict must be rejected before profiles, config, or fonts change.
     $terminalCases = @{
